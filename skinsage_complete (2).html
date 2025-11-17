@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>SkinSage - Your Skin Analysis Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            touch-action: pan-y;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 500px;
+                height: 90vh;
+                max-height: 800px;
+                margin: 0 auto;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                margin-top: 5vh;
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+            min-height: 70px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .back-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .back-btn.visible {
+            display: flex;
+        }
+
+        .header-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .header-avatar {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            background: #e5ddd5;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='%23e5ddd5'/%3E%3Cpath d='M0 0l50 50M50 0l50 50M0 50l50 50' stroke='%23d4ccc4' stroke-width='0.5' fill='none' opacity='0.1'/%3E%3C/svg%3E");
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #1f2937;
+            border-radius: 0 8px 8px 8px;
+        }
+
+        .message.user .message-content {
+            background: #dcf8c6;
+            color: #1f2937;
+            border-radius: 8px 0 8px 8px;
+        }
+
+        .message-text {
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-line;
+        }
+
+        .message-time {
+            font-size: 11px;
+            margin-top: 4px;
+            opacity: 0.6;
+            text-align: right;
+        }
+
+        .condition-buttons {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .condition-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: manipulation;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .condition-btn:active {
+            transform: scale(0.98);
+        }
+
+        .condition-btn.acne {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .condition-btn.pigmentation {
+            background: #ddd6fe;
+            color: #5b21b6;
+        }
+
+        .condition-btn.aging {
+            background: #fce7f3;
+            color: #9f1239;
+        }
+
+        .condition-btn.vascular {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .input-area {
+            padding: 12px 16px;
+            background: #f0f0f0;
+            border-top: 1px solid #d1d1d1;
+            flex-shrink: 0;
+            min-height: 70px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+            touch-action: manipulation;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 6px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            width: fit-content;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        .loading-text {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .loading-subtext {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+        }
+
+        .loading-hospital {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .summary-section {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .summary-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-icon {
+            font-size: 18px;
+        }
+
+        .recommendation-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .recommendation-card.urgent {
+            background: linear-gradient(135deg, #ef444415 0%, #dc262615 100%);
+            border-left-color: #ef4444;
+        }
+
+        .recommendation-card.good {
+            background: linear-gradient(135deg, #10b98115 0%, #05966915 100%);
+            border-left-color: #10b981;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">✨</div>
+        <div class="loading-text">SkinSage</div>
+        <div class="loading-subtext">Your Skin Analysis Guide</div>
+        <div class="loading-hospital">SMF Hospital</div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" id="backBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+            <div class="header-content">
+                <h1>SkinSage AI</h1>
+                <p>Online • SMF Hospital</p>
+            </div>
+            <div class="header-avatar">
+                ✨
+            </div>
+        </div>
+
+        <div class="messages-area" id="messagesArea"></div>
+
+        <div class="input-area" id="inputArea"></div>
+    </div>
+
+    <script>
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        const conditions = {
+            acne: {
+                name: "Acne & Acne Scars",
+                icon: "🔴",
+                overview: "Acne vulgaris is one of the most common skin conditions, affecting 66-72% of young adults in India. It's a chronic inflammatory disease caused by excess sebum production, bacterial colonization, and follicular inflammation. Advanced laser technologies like Nd:YAG, Carbon Laser Peel, and Pico laser offer effective treatment options.",
+                questions: [
+                    {
+                        id: 1,
+                        text: "Do you currently have active pimples, pustules, or papules on your face?",
+                        yesResponse: "Active inflammatory lesions indicate ongoing acne. The presence of papules and pustules suggests moderate to severe acne requiring medical intervention.",
+                        noResponse: "Good! The absence of active breakouts suggests either controlled acne or post-acne concerns like scarring.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 2,
+                        text: "Do you frequently notice blackheads (open comedones) or whiteheads (closed comedones)?",
+                        yesResponse: "Comedones form when hair follicles become clogged with sebum and dead skin cells. This indicates comedonal acne that responds well to laser treatment.",
+                        noResponse: "The absence of comedones is positive. Your pores are not significantly obstructed.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 3,
+                        text: "Do you experience painful, deep-seated nodules or cysts under the skin?",
+                        yesResponse: "⚠️ Nodular or cystic acne is severe and carries high risk of permanent scarring. Requires aggressive treatment including possible isotretinoin therapy.",
+                        noResponse: "Excellent! Deep cystic lesions are the most severe form and often cause significant scarring.",
+                        severity: "HIGH"
+                    },
+                    {
+                        id: 4,
+                        text: "Is your skin excessively oily, especially in the T-zone (forehead, nose, chin)?",
+                        yesResponse: "Excessive sebum production is a primary factor in acne development. Laser treatments can help reduce sebum production and normalize oil levels.",
+                        noResponse: "Normal sebum levels are beneficial. Balance is key for healthy skin.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 5,
+                        text: "Do you have visible acne scars (depressed/raised) or dark spots (PIH)?",
+                        yesResponse: "Post-acne scarring requires specific resurfacing treatments. Fractional Pico Laser shows 50-80% improvement in acne scars.",
+                        noResponse: "No visible scarring is excellent. Early acne treatment prevents permanent scarring.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 6,
+                        text: "Are your facial pores noticeably enlarged or prominent?",
+                        yesResponse: "Enlarged pores result from chronic sebaceous enlargement. Carbon Laser Peel can reduce pore diameter by 20-40%.",
+                        noResponse: "Fine pores indicate good skin texture and minimal sebaceous hyperactivity.",
+                        severity: "MILD"
+                    }
+                ],
+                laserTreatments: [
+                    {
+                        name: "Carbon Laser Peel",
+                        description: "For active acne and pore reduction",
+                        mechanism: "Photoacoustic destruction of C. acnes bacteria",
+                        sessions: "4-6 treatments",
+                        improvement: "50-70% reduction in active acne"
+                    },
+                    {
+                        name: "Fractional Pico Laser",
+                        description: "For acne scar remodeling",
+                        mechanism: "LIOB (Laser-Induced Optical Breakdown) collagen stimulation",
+                        sessions: "3-5 treatments",
+                        improvement: "50-80% scar improvement"
+                    },
+                    {
+                        name: "Nd:YAG 1064nm",
+                        description: "For inflammatory acne control",
+                        mechanism: "Selective thermal damage to sebaceous glands",
+                        sessions: "3-4 treatments",
+                        improvement: "42% reduction in inflammatory lesions, 18% sebum reduction"
+                    }
+                ]
+            },
+            pigmentation: {
+                name: "Pigmentation Disorders",
+                icon: "🟤",
+                overview: "Hyperpigmentation affects 20-30% of Indians, with conditions like melasma and PIH being prevalent. Indian skin (Fitzpatrick IV-V) is particularly prone to pigmentary disorders. Q-switched Nd:YAG and Pico lasers target melanin precisely without damaging surrounding tissue.",
+                questions: [
+                    {
+                        id: 1,
+                        text: "Do you have brown or grey-brown patches on your face, especially cheeks, forehead, or upper lip?",
+                        yesResponse: "This pattern is characteristic of melasma, a chronic condition triggered by hormonal influences, UV exposure, and genetics.",
+                        noResponse: "The absence of facial patches is positive. Continue sun protection to prevent development.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 2,
+                        text: "Are these dark areas symmetrical (appearing on both sides of your face)?",
+                        yesResponse: "Bilateral symmetry is pathognomonic for melasma. This pattern is most common in Indian women.",
+                        noResponse: "Asymmetric pigmentation may indicate different etiology such as PIH or lentigines.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 3,
+                        text: "Do you notice your dark spots worsen with sun exposure?",
+                        yesResponse: "Photosensitivity confirms UV radiation's role in stimulating melanin production. Strict sun protection is essential.",
+                        noResponse: "If pigmentation doesn't worsen with sun, dermal melanin or hormonal factors may be dominant.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 4,
+                        text: "Do you have small, flat, brown spots (freckles/lentigines) on sun-exposed areas?",
+                        yesResponse: "Solar lentigines result from chronic UV exposure. Q-switched Nd:YAG achieves 70-90% clearance in 1-2 sessions.",
+                        noResponse: "Good sun protection practices are evident. Continue these preventive measures.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 5,
+                        text: "Do you have dark marks remaining after acne, injuries, or skin inflammation?",
+                        yesResponse: "Post-inflammatory hyperpigmentation (PIH) is common in Indian skin. Laser treatment with proper protocols is safe and effective.",
+                        noResponse: "Your skin's healing response doesn't trigger excessive pigmentation, which is favorable.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 6,
+                        text: "Is your overall skin tone uneven or patchy?",
+                        yesResponse: "Generalized dyschromia suggests multiple factors including photodamage and hormonal influences. Full-face Pico Laser toning provides overall brightening.",
+                        noResponse: "Even skin tone indicates uniform melanin distribution and good skin health.",
+                        severity: "MODERATE"
+                    }
+                ],
+                laserTreatments: [
+                    {
+                        name: "Q-switched Nd:YAG 1064nm",
+                        description: "For melasma and solar spots",
+                        mechanism: "Selective melanin photothermolysis",
+                        sessions: "4-8 treatments",
+                        improvement: "60-80% lightening"
+                    },
+                    {
+                        name: "Pico Laser",
+                        description: "For stubborn pigmentation and brightening",
+                        mechanism: "Photomechanical melanin fragmentation",
+                        sessions: "4-6 treatments",
+                        improvement: "70-90% clearance for spots"
+                    },
+                    {
+                        name: "Fractional Treatments",
+                        description: "For deep dermal melasma",
+                        mechanism: "Microthermal zone remodeling",
+                        sessions: "4-6 treatments",
+                        improvement: "50-70% improvement"
+                    }
+                ]
+            },
+            aging: {
+                name: "Skin Aging & Rejuvenation",
+                icon: "⏳",
+                overview: "Photoaging affects approximately 60% of Indians above age 30. In Indian skin, photoaging manifests more as pigmentary changes and roughness. Fractional Pico, Nd:YAG tightening, and Carbon Laser stimulate collagen production and improve dermal thickness with minimal downtime.",
+                questions: [
+                    {
+                        id: 1,
+                        text: "Do you have fine lines around your eyes (crow's feet), forehead, or mouth?",
+                        yesResponse: "Dynamic wrinkles form from repetitive facial movements combined with collagen loss. Fractional Pico Laser shows 40-50% improvement.",
+                        noResponse: "Absence of fine lines suggests good collagen integrity. Preventive treatments can maintain this.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 2,
+                        text: "Do you have deeper creases or folds (nasolabial folds, marionette lines)?",
+                        yesResponse: "Deep static wrinkles indicate significant collagen degradation. Multimodal treatment approach yields best results.",
+                        noResponse: "Good structural support in deeper skin layers. Continue preventive measures.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 3,
+                        text: "Does your skin feel loose or saggy, especially around jawline or cheeks?",
+                        yesResponse: "Skin laxity requires tightening treatments. Nd:YAG provides 20-30% tightening through collagen contraction.",
+                        noResponse: "Good skin elasticity and firmness are maintained. Collagen integrity is preserved.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 4,
+                        text: "Is your skin texture rough, uneven, or lacking smoothness?",
+                        yesResponse: "Rough texture from photodamage responds excellently to resurfacing. Carbon Laser Peel provides immediate smoothing effect.",
+                        noResponse: "Smooth texture indicates good epidermal turnover and healthy skin.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 5,
+                        text: "Does your skin appear dull, tired, or lacking radiance?",
+                        yesResponse: "Skin dullness results from impaired cellular turnover. Carbon Laser Peel provides instant glow with zero downtime.",
+                        noResponse: "Radiant skin indicates healthy cellular function and good circulation.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 6,
+                        text: "Have you noticed hollowing under eyes, temples, or cheeks (volume loss)?",
+                        yesResponse: "Volume depletion from fat atrophy. While lasers improve skin quality, volumizing treatments may be complementary.",
+                        noResponse: "Maintained facial volume indicates preserved subcutaneous architecture.",
+                        severity: "MODERATE"
+                    }
+                ],
+                laserTreatments: [
+                    {
+                        name: "Fractional Pico Laser",
+                        description: "For collagen stimulation",
+                        mechanism: "LIOB neocollagenesis",
+                        sessions: "4-6 treatments",
+                        improvement: "40-60% wrinkle reduction"
+                    },
+                    {
+                        name: "Nd:YAG Skin Tightening",
+                        description: "For firmness and lift",
+                        mechanism: "Bulk dermal heating and collagen contraction",
+                        sessions: "1-2 treatments",
+                        improvement: "20-30% tightening"
+                    },
+                    {
+                        name: "Carbon Laser Peel",
+                        description: "For texture and radiance",
+                        mechanism: "Exfoliation and epidermal renewal",
+                        sessions: "4-6 treatments",
+                        improvement: "70-85% texture improvement"
+                    }
+                ]
+            },
+            vascular: {
+                name: "Vascular Lesions",
+                icon: "🔴",
+                overview: "Vascular lesions including telangiectasias, spider veins, and rosacea affect 5-15% of Indian population. Nd:YAG 1064nm laser is the gold standard due to excellent hemoglobin absorption and deep penetration, making it safe for darker Indian skin types.",
+                questions: [
+                    {
+                        id: 1,
+                        text: "Do you have visible small red blood vessels (spider veins/telangiectasias) on your face?",
+                        yesResponse: "Facial telangiectasias are dilated superficial vessels. Nd:YAG laser achieves 70-90% clearance in 2-3 sessions.",
+                        noResponse: "No visible telangiectasias suggests good vascular integrity.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 2,
+                        text: "Do you experience persistent facial redness or flushing?",
+                        yesResponse: "Persistent erythema suggests rosacea. Early laser treatment prevents progression and reduces background redness by 50-70%.",
+                        noResponse: "Absence of persistent redness is positive. Occasional flushing from heat/spice is physiological.",
+                        severity: "MODERATE"
+                    },
+                    {
+                        id: 3,
+                        text: "Do you have small, bright red bumps (cherry angiomas) on your body or face?",
+                        yesResponse: "Cherry angiomas are benign vascular proliferations. Nd:YAG achieves 80-100% removal in single session.",
+                        noResponse: "No angiomas present currently. These commonly develop with advancing age.",
+                        severity: "MILD"
+                    },
+                    {
+                        id: 4,
+                        text: "Do you notice redness that worsens with spicy food, alcohol, stress, or temperature changes?",
+                        yesResponse: "⚠️ Trigger-induced flushing is characteristic of rosacea. Without treatment, this progresses to permanent telangiectasias. Urgent intervention recommended.",
+                        noResponse: "Normal vascular responses to stimuli. Rosacea diathesis unlikely.",
+                        severity: "HIGH"
+                    },
+                    {
+                        id: 5,
+                        text: "Do you have visible veins on your legs (reticular veins or spider veins)?",
+                        yesResponse: "Lower extremity venous issues respond well to Nd:YAG laser. 60-80% improvement in 2-4 sessions with compression therapy.",
+                        noResponse: "Good venous circulation in lower extremities.",
+                        severity: "MODERATE"
+                    }
+                ],
+                laserTreatments: [
+                    {
+                        name: "Long-pulse Nd:YAG 1064nm",
+                        description: "For all vascular lesions",
+                        mechanism: "Hemoglobin-targeted vessel coagulation",
+                        sessions: "2-3 treatments",
+                        improvement: "70-90% clearance"
+                    },
+                    {
+                        name: "Rosacea Protocol",
+                        description: "For persistent redness and flushing",
+                        mechanism: "Diffuse vascular targeting with maintenance",
+                        sessions: "3-4 treatments + maintenance",
+                        improvement: "50-70% erythema reduction"
+                    },
+                    {
+                        name: "Sequential Treatments",
+                        description: "For larger vessels",
+                        mechanism: "Progressive vessel closure",
+                        sessions: "2-4 treatments",
+                        improvement: "60-80% improvement"
+                    }
+                ]
+            }
+        };
+
+        let stage = 'welcome';
+        let selectedCondition = null;
+        let currentQuestion = 0;
+        let responses = [];
+
+        const messagesArea = document.getElementById('messagesArea');
+        const inputArea = document.getElementById('inputArea');
+        const backBtn = document.getElementById('backBtn');
+        const loadingScreen = document.getElementById('loadingScreen');
+
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                loadingScreen.classList.add('hidden');
+                setTimeout(function() {
+                    initWelcome();
+                }, 500);
+            }, 1800);
+        });
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }, 100);
+        }
+
+        function getTime() {
+            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function addBotMessage(text, showOptions = false, delay = 800) {
+            return new Promise((resolve) => {
+                showTypingIndicator();
+                
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message bot';
+                    messageDiv.innerHTML = `
+                        <div class="message-content">
+                            <div class="message-text">${text}</div>
+                            <div class="message-time">${getTime()}</div>
+                            ${showOptions ? getConditionButtons() : ''}
+                        </div>
+                    `;
+                    messagesArea.appendChild(messageDiv);
+                    scrollToBottom();
+                    resolve();
+                }, delay);
+            });
+        }
+
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-text">${text}</div>
+                    <div class="message-time">${getTime()}</div>
+                </div>
+            `;
+            messagesArea.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+            messagesArea.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function getConditionButtons() {
+            return `
+                <div class="condition-buttons">
+                    <button class="condition-btn acne" onclick="handleConditionSelect('acne')">
+                        🔴 Acne & Acne Scars
+                    </button>
+                    <button class="condition-btn pigmentation" onclick="handleConditionSelect('pigmentation')">
+                        🟤 Pigmentation Disorders
+                    </button>
+                    <button class="condition-btn aging" onclick="handleConditionSelect('aging')">
+                        ⏳ Skin Aging & Rejuvenation
+                    </button>
+                    <button class="condition-btn vascular" onclick="handleConditionSelect('vascular')">
+                        🔴 Vascular Lesions
+                    </button>
+                </div>
+            `;
+        }
+
+        async function initWelcome() {
+            await addBotMessage("Hello! 👋 Welcome to SkinSage - Your Skin Analysis Guide");
+            await addBotMessage("I'm here to help you understand your skin concerns and learn about advanced laser treatments available at SMF Hospital. 🏥", false, 1500);
+            await addBotMessage("⚠️ Important: This is an educational tool only, not a medical diagnosis. Always consult qualified dermatologists for proper evaluation and treatment.", false, 1800);
+            await addBotMessage("Please select your primary skin concern:", true, 2000);
+        }
+
+        async function handleConditionSelect(conditionKey) {
+            const condition = conditions[conditionKey];
+            selectedCondition = conditionKey;
+            addUserMessage(condition.name);
+            
+            await addBotMessage(`Great choice! Let me tell you about ${condition.name}.`, false, 500);
+            await addBotMessage(condition.overview, false, 1500);
+            
+            stage = 'overview';
+            await addBotMessage("Ready to start the skin assessment?", false, 2000);
+            updateInputArea();
+        }
+
+        async function startAssessment() {
+            stage = 'assessment';
+            currentQuestion = 0;
+            responses = [];
+            backBtn.classList.add('visible');
+            addUserMessage("Yes, let's start!");
+            
+            await addBotMessage(`Question 1 of ${conditions[selectedCondition].questions.length}`, false, 500);
+            showProgressBar();
+            await addBotMessage(conditions[selectedCondition].questions[0].text, false, 800);
+            updateInputArea();
+        }
+
+        function showProgressBar() {
+            const totalQuestions = conditions[selectedCondition].questions.length;
+            const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+            
+            const existingProgress = document.querySelector('.progress-container');
+            if (existingProgress) {
+                existingProgress.querySelector('.progress-fill').style.width = progress + '%';
+            } else {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                messageDiv.innerHTML = `
+                    <div class="message-content progress-container">
+                        <div class="message-text">Assessment Progress</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="message-time">${currentQuestion + 1} of ${totalQuestions}</div>
+                    </div>
+                `;
+                messagesArea.appendChild(messageDiv);
+                scrollToBottom();
+            }
+        }
+
+        async function handleAnswer(answer) {
+            const condition = conditions[selectedCondition];
+            const question = condition.questions[currentQuestion];
+            
+            addUserMessage(answer);
+            
+            const response = answer === 'Yes' ? question.yesResponse : question.noResponse;
+            const newResponses = [...responses, { 
+                question: question.text, 
+                answer, 
+                severity: question.severity 
+            }];
+            responses = newResponses;
+
+            await addBotMessage(response, false, 800);
+            
+            if (currentQuestion < condition.questions.length - 1) {
+                currentQuestion++;
+                showProgressBar();
+                await addBotMessage(`Question ${currentQuestion + 1} of ${condition.questions.length}`, false, 1500);
+                await addBotMessage(condition.questions[currentQuestion].text, false, 800);
+            } else {
+                await showResults(newResponses);
+            }
+            updateInputArea();
+        }
+
+        async function showResults(finalResponses) {
+            stage = 'results';
+            const yesCount = finalResponses.filter(r => r.answer === 'Yes').length;
+            const highSeverity = finalResponses.filter(r => r.answer === 'Yes' && (r.severity === 'HIGH' || r.severity === 'CRITICAL')).length;
+            const critical = finalResponses.find(r => r.answer === 'Yes' && r.severity === 'CRITICAL');
+
+            await addBotMessage("Assessment complete! ✅ Let me analyze your responses...", false, 1500);
+            
+            // Show summary
+            await showSummary(finalResponses);
+            
+            let recommendation = getRecommendation(yesCount, highSeverity, critical);
+            
+            await addBotMessage(`${recommendation.message}`, false, 1500);
+            
+            // Show laser treatments if applicable
+            if (recommendation.showLasers) {
+                await showLaserTreatments();
+            }
+            
+            await addBotMessage(recommendation.action, false, 2000);
+            await addBotMessage(`Timeline: ${recommendation.timeline}`, false, 1000);
+            
+            await addBotMessage("📋 Next Steps at SMF Hospital:\n\n1️⃣ Visit consultation desk for laser demonstrations\n2️⃣ Book dermatologist appointment for comprehensive analysis\n3️⃣ Explore customized treatment plans\n4️⃣ Begin your treatment journey", false, 2500);
+            
+            await addBotMessage("⚠️ Remember: This assessment is for educational purposes only. Always consult qualified dermatologists for proper diagnosis and treatment.", false, 2000);
+            await addBotMessage("Would you like to assess another skin concern or retake this assessment?", false, 1500);
+            
+            updateInputArea();
+        }
+
+        async function showSummary(finalResponses) {
+            let summaryHTML = '<div class="summary-section">';
+            summaryHTML += '<div style="font-weight: 600; margin-bottom: 8px;">Your Response Summary:</div>';
+            
+            finalResponses.forEach((resp, idx) => {
+                const icon = resp.answer === 'Yes' ? '✓' : '✗';
+                const color = resp.answer === 'Yes' ? '#10b981' : '#6b7280';
+                summaryHTML += `
+                    <div class="summary-item">
+                        <span class="summary-icon" style="color: ${color}">${icon}</span>
+                        <span style="font-size: 13px; flex: 1;">Q${idx + 1}: ${resp.answer}</span>
+                    </div>
+                `;
+            });
+            
+            summaryHTML += '</div>';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${summaryHTML}
+                    <div class="message-time">${getTime()}</div>
+                </div>
+            `;
+            messagesArea.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        async function showLaserTreatments() {
+            const condition = conditions[selectedCondition];
+            let laserHTML = '<div style="font-weight: 600; margin-bottom: 12px;">⚡ Recommended Laser Treatments:</div>';
+            
+            condition.laserTreatments.forEach((treatment, idx) => {
+                laserHTML += `
+                    <div style="background: #f3f4f6; border-radius: 8px; padding: 10px; margin-bottom: 10px;">
+                        <div style="font-weight: 600; color: #667eea; margin-bottom: 6px;">${idx + 1}. ${treatment.name}</div>
+                        <div style="font-size: 13px; margin-bottom: 4px;">📌 ${treatment.description}</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">• Mechanism: ${treatment.mechanism}</div>
+                        <div style="font-size: 12px; color: #6b7280; margin-bottom: 2px;">• Sessions: ${treatment.sessions}</div>
+                        <div style="font-size: 12px; color: #059669; font-weight: 600;">✓ Expected: ${treatment.improvement}</div>
+                    </div>
+                `;
+            });
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-text">${laserHTML}</div>
+                    <div class="message-time">${getTime()}</div>
+                </div>
+            `;
+            messagesArea.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function getRecommendation(yesCount, highSeverity, critical) {
+            if (selectedCondition === 'acne') {
+                if (highSeverity >= 1 || yesCount >= 4) {
+                    return {
+                        message: "🏥 Professional Evaluation Needed\n\nYour assessment indicates moderate to severe acne concerns that would benefit from professional dermatological care.",
+                        action: "Recommended Action: Schedule consultation with our dermatologists for comprehensive acne management including topical/oral medications and advanced laser therapies.\n\n✨ Our laser treatments can significantly improve acne and scarring when combined with proper medical management.",
+                        timeline: "Within 1-2 weeks",
+                        showLasers: true
+                    };
+                } else if (yesCount >= 2) {
+                    return {
+                        message: "✨ Excellent Candidate for Laser Therapy\n\nYour skin concerns can benefit greatly from our advanced laser technologies.",
+                        action: "Recommended Action: Our Carbon Laser Peel and Fractional Pico treatments are highly effective for acne, scarring, and pore reduction. Book a consultation at our booth to learn more!",
+                        timeline: "Consultation available today at booth",
+                        showLasers: true
+                    };
+                } else {
+                    return {
+                        message: "✅ Healthy Skin - Maintain Prevention\n\nMinimal acne concerns detected. Your skin is in good condition!",
+                        action: "Recommended Action: Continue good skincare practices, sun protection, and consider periodic professional assessments. Monthly Carbon Laser maintenance can help prevent future breakouts.",
+                        timeline: "Annual check-ups recommended",
+                        showLasers: false
+                    };
+                }
+            } else if (selectedCondition === 'pigmentation') {
+                if (yesCount >= 4) {
+                    return {
+                        message: "⚡ Ideal for Advanced Laser Technology\n\nYour pigmentation profile is well-suited for laser intervention.",
+                        action: "Recommended Action: Our Q-switched Nd:YAG and Pico lasers target melanin precisely with minimal downtime, specifically calibrated for Indian skin types (Fitzpatrick IV-V).\n\n📊 Expected: 60-80% improvement in melasma, 70-90% clearance for solar spots.",
+                        timeline: "Series of 4-8 sessions recommended",
+                        showLasers: true
+                    };
+                } else if (yesCount >= 2) {
+                    return {
+                        message: "💚 Good Candidate for Laser Treatment\n\nMild to moderate pigmentation responds well to laser therapy.",
+                        action: "Recommended Action: Targeted Q-switched Nd:YAG for localized spots or Pico Laser for overall brightening can significantly improve skin tone evenness and restore natural radiance.",
+                        timeline: "3-6 sessions typically needed",
+                        showLasers: true
+                    };
+                } else {
+                    return {
+                        message: "✅ Healthy Skin Tone - Maintain Prevention\n\nYour skin shows minimal pigmentation concerns.",
+                        action: "Recommended Action: Focus on prevention through sun protection (SPF 50+ daily) and good skincare practices. Consider quarterly laser toning sessions for maintenance and annual skin assessments.",
+                        timeline: "Annual dermatology check recommended",
+                        showLasers: false
+                    };
+                }
+            } else if (selectedCondition === 'aging') {
+                if (yesCount >= 4) {
+                    return {
+                        message: "✨ Excellent Candidate for Skin Rejuvenation\n\nMultiple aging signs can be comprehensively addressed with our laser protocols.",
+                        action: "Recommended Action: Our combination approach using Fractional Pico (collagen stimulation), Nd:YAG (skin tightening), and Carbon Laser (texture & glow) provides visible rejuvenation.\n\n📊 Expected: 40-60% wrinkle reduction, 70-85% texture improvement, 20-30% tightening, overall 5-7 years younger appearance.",
+                        timeline: "4-6 sessions for optimal results",
+                        showLasers: true
+                    };
+                } else if (yesCount >= 2) {
+                    return {
+                        message: "🌟 Perfect for Preventive Rejuvenation\n\nEarly aging signs respond beautifully to preventive laser treatments.",
+                        action: "Recommended Action: Regular laser sessions maintain collagen production and prevent accelerated aging. Think of it as 'exercise for your skin' - consistency yields lasting results.\n\nMonthly Carbon Laser and quarterly preventive sessions recommended.",
+                        timeline: "Quarterly maintenance sessions",
+                        showLasers: true
+                    };
+                } else {
+                    return {
+                        message: "✅ Healthy Skin - Maintain Prevention\n\nYour skin shows minimal aging signs - excellent!",
+                        action: "Recommended Action: Focus on prevention through daily SPF 50+, retinoids, antioxidants, and healthy lifestyle. Consider annual preventive laser sessions and skin assessments.",
+                        timeline: "Annual skin assessment recommended",
+                        showLasers: false
+                    };
+                }
+            } else if (selectedCondition === 'vascular') {
+                if (highSeverity >= 1 || yesCount >= 3) {
+                    return {
+                        message: "🔬 Excellent Candidate for Vascular Laser\n\nYour vascular concerns are ideal for Nd:YAG laser treatment (gold standard).",
+                        action: "Recommended Action: Long-pulse Nd:YAG 1064nm targets hemoglobin precisely, coagulating vessels while protecting surrounding skin. Safe for all skin types including Indian skin.\n\n📊 Expected: 70-90% clearance for telangiectasias, 50-70% erythema reduction for rosacea.",
+                        timeline: "2-4 sessions typically required",
+                        showLasers: true
+                    };
+                } else if (yesCount >= 1) {
+                    return {
+                        message: "💡 Laser Treatment Can Help\n\nIndividual vascular lesions can be effectively treated.",
+                        action: "Recommended Action: Targeted Nd:YAG laser provides quick, precise treatment with immediate visible results. Cherry angiomas often resolve in single session with 80-100% removal rate.",
+                        timeline: "1-2 sessions may suffice",
+                        showLasers: true
+                    };
+                } else {
+                    return {
+                        message: "✅ Healthy Vascular Status\n\nNo vascular lesions detected. Your skin shows healthy vascular integrity.",
+                        action: "Recommended Action: Continue preventive measures including daily sun protection, gentle skincare, and avoiding known rosacea triggers. Regular skin monitoring recommended.",
+                        timeline: "Annual skin check recommended",
+                        showLasers: false
+                    };
+                }
+            }
+        }
+
+        function updateInputArea() {
+            if (stage === 'overview') {
+                inputArea.innerHTML = `
+                    <button class="action-btn btn-primary" onclick="startAssessment()">
+                        Start Assessment
+                    </button>
+                `;
+            } else if (stage === 'assessment') {
+                inputArea.innerHTML = `
+                    <button class="action-btn btn-success" onclick="handleAnswer('Yes')">
+                        ✓ Yes
+                    </button>
+                    <button class="action-btn btn-danger" onclick="handleAnswer('No')">
+                        ✗ No
+                    </button>
+                `;
+            } else if (stage === 'results') {
+                inputArea.innerHTML = `
+                    <button class="action-btn btn-primary" onclick="resetToHome()">
+                        Assess Another Skin Concern
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="retakeAssessment()">
+                        Retake This Assessment
+                    </button>
+                `;
+            } else {
+                inputArea.innerHTML = '';
+            }
+        }
+
+        async function resetToHome() {
+            stage = 'welcome';
+            selectedCondition = null;
+            currentQuestion = 0;
+            responses = [];
+            messagesArea.innerHTML = '';
+            inputArea.innerHTML = '';
+            backBtn.classList.remove('visible');
+            
+            await addBotMessage("Welcome back! 👋", false, 500);
+            await addBotMessage("Please select a skin concern you'd like to learn about:", true, 1000);
+        }
+
+        async function retakeAssessment() {
+            stage = 'overview';
+            currentQuestion = 0;
+            responses = [];
+            addUserMessage("Retake assessment");
+            await addBotMessage("Let's retake the assessment. Ready to start?", false, 500);
+            updateInputArea();
+        }
+
+        backBtn.addEventListener('click', resetToHome);
+    </script>
+</body>
+</html>
